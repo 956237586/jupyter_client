@@ -18,7 +18,7 @@ from traitlets.utils.importstring import import_item
 from .connect import KernelConnectionInfo
 from .kernelspec import NATIVE_KERNEL_NAME, KernelSpecManager
 from .manager import KernelManager
-from .utils import PORTS_ENV_MAP, ensure_async, run_sync, utcnow
+from .utils import ensure_async, run_sync, utcnow
 
 
 class DuplicateKernelError(Exception):
@@ -201,12 +201,6 @@ class MultiKernelManager(LoggingConfigurable):
         # subclass we are using. It can be configured as any Configurable,
         # including things like its transport and ip.
         constructor_kwargs = {}
-        # ------ set ports from env begin
-        env = kwargs.get("env", {})
-        for arg_key, env_key in PORTS_ENV_MAP.items():
-            if env_key in env:
-                constructor_kwargs[arg_key] = int(env[env_key])
-        # ------ set ports from env end
         if self.kernel_spec_manager:
             constructor_kwargs["kernel_spec_manager"] = self.kernel_spec_manager
         km = self.kernel_manager_factory(

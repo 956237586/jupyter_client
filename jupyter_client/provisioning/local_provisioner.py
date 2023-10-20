@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from ..connect import KernelConnectionInfo, LocalPortCache
 from ..launcher import launch_kernel
 from ..localinterfaces import is_local_ip, local_ips
-from ..utils import PORTS_ENV_MAP
 from .provisioner_base import KernelProvisionerBase
 
 
@@ -189,11 +188,18 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
                 km.hb_port = lpc.find_available_port(km.ip)
                 km.control_port = lpc.find_available_port(km.ip)
                 self.ports_cached = True
+            ports_env_map = {
+                'hb_port': 'JUPYTER_SERVER_HB_PORT',
+                'shell_port': 'JUPYTER_SERVER_SHELL_PORT',
+                'iopub_port': 'JUPYTER_SERVER_IOPUB_PORT',
+                'stdin_port': 'JUPYTER_SERVER_STDIN_PORT',
+                'control_port': 'JUPYTER_SERVER_CONTROL_PORT',
+            }
+            templated_env = self.kernel_spec.env
+            for arg_key, env_key in ports_env_map.items():
+                if env_key in templated_env:
+                    setattr(km, arg_key, int(templated_env[env_key]))
             if 'env' in kwargs:
-                env = kwargs.get("env", {})
-                for arg_key, env_key in PORTS_ENV_MAP.items():
-                    if env_key in env:
-                        setattr(km, arg_key, int(env[env_key]))
                 jupyter_session = kwargs['env'].get("JPY_SESSION_NAME", "")
                 km.write_connection_file(jupyter_session=jupyter_session)
             else:
